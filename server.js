@@ -113,6 +113,8 @@ app.post('/api/auth/firebase-login', (req, res) => {
 
     // Upsert user
     let dbUser = db.prepare('SELECT * FROM users WHERE email = ?').get(trimmedEmail);
+    const isNew = !dbUser;
+
     if (!dbUser) {
       const result = db
         .prepare('INSERT INTO users (email, name, role, google_id, avatar_url) VALUES (?, ?, ?, ?, ?)')
@@ -126,7 +128,17 @@ app.post('/api/auth/firebase-login', (req, res) => {
       dbUser.avatar_url = avatar || null;
     }
 
-    res.json({ token: makeToken(dbUser), user: { id: dbUser.id, email: dbUser.email, name: dbUser.name, role: dbUser.role, avatar_url: dbUser.avatar_url } });
+    res.json({
+      token: makeToken(dbUser),
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.name,
+        role: dbUser.role,
+        avatar_url: dbUser.avatar_url,
+        isNew: isNew
+      }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
